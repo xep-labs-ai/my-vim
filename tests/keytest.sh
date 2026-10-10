@@ -16,9 +16,14 @@ T send-keys -t k M-.; sleep 0.5
 w 'winwidth(0)' w2
 T send-keys -t k i x j k; sleep 0.5          # jk typed at human speed (> ttimeoutlen apart)
 w 'mode() . getline(1)' m
+T send-keys -t k Escape ':call myvim#harpoon#add()' Enter; sleep 0.5
+T send-keys -t k Escape ':enew' Enter; sleep 0.5
+T send-keys -t k M-h; sleep 0.5
+w "expand('%:t')" h
 T send-keys -t k Escape ':qa!' Enter; sleep 0.5
 T kill-server 2>/dev/null
 fail=0
 [ "$(cat $out.w2)" -eq $(( $(cat $out.w1) + 2 )) ] && echo "PASS <M-.> widens by 2" || { echo "FAIL <M-.>: $(cat $out.w1) -> $(cat $out.w2)"; fail=1; }
 [ "$(cat $out.m)" = nxone ] && echo "PASS jk leaves insert" || { echo "FAIL jk: $(cat $out.m)"; fail=1; }
+[ "$(cat $out.h)" = "$(basename $out.txt)" ] && echo "PASS <M-h> opens harpoon 1" || { echo "FAIL <M-h>: $(cat $out.h)"; fail=1; }
 exit $fail
