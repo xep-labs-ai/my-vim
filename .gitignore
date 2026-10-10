@@ -1,0 +1,4 @@
+# undo, swap, viminfo, harpoon lists (see vimrc)
+/.state/
+# VM addresses for the tests (never commit them: the repo is public)
+/.claude/*.local

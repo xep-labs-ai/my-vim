@@ -1,0 +1,26 @@
+# Vendored into pack/vendor/opt/<name> by update-plugins.sh.
+# name                     url                                                      commit        [pathspec...]
+vim-nightfly-colors        https://github.com/bluz71/vim-nightfly-colors             2c31d07ce05efa92bcb7f893f9c74a846226c898
+vim-fugitive               https://github.com/tpope/vim-fugitive                     3b753cf8c6a4dcde6edee8827d464ba9b8c4a6f0
+vim-surround               https://github.com/tpope/vim-surround                     3d188ed2113431cf8dac77be61b842acb64433d9
+vim-commentary             https://github.com/tpope/vim-commentary                   64a654ef4a20db1727938338310209b6a63f60c9
+vim-repeat                 https://github.com/tpope/vim-repeat                       65846025c15494983dafe5e3b46c8f88ab2e9635
+ReplaceWithRegister        https://github.com/vim-scripts/ReplaceWithRegister        832efc23111d19591d495dc72286de2fb0b09345
+vim-tmux-navigator         https://github.com/christoomey/vim-tmux-navigator         e41c431a0c7b7388ae7ba341f01a0d217eb3a432
+undotree                   https://github.com/mbbill/undotree                        6fa6b57cda8459e1e4b2ca34df702f55242f4e4d
+vim-maximizer              https://github.com/szw/vim-maximizer                      2e54952fe91e140a2e69f35f22131219fcd9c5f1
+nerdtree                   https://github.com/preservim/nerdtree                     690d061b591525890f1471c6675bcb5bdc8cdff9
+vim-gitgutter              https://github.com/airblade/vim-gitgutter                 90b75207bd9b55d8ac4af15f72b4e935462014d0
+lightline.vim              https://github.com/itchyny/lightline.vim                  255f61db1a4cc36ee11eb479261d6bc471ed0819  . :(exclude)test
+auto-pairs                 https://github.com/jiangmiao/auto-pairs                   39f06b873a8449af8ff6a3eee716d3da14d63a76
+indentLine                 https://github.com/Yggdroot/indentLine                    b96a75985736da969ac38b72a7716a8c57bdde98
+ctrlp.vim                  https://github.com/ctrlpvim/ctrlp.vim                     0065942ef13ce28293e2b26cb622d035da050b44
+vista.vim                  https://github.com/liuchengxu/vista.vim                   1e90efad6e32c4f7d16b1ca8f49bf63d0693802e
+fzf                        https://github.com/junegunn/fzf                           33a3456921a17c53f42f8610783b6d379d652d3e  plugin doc LICENSE
+fzf.vim                    https://github.com/junegunn/fzf.vim                       023de3c0e158ff9c2b0992175af10be97c2f2158
+vim-lsp                    https://github.com/prabirshrestha/vim-lsp                 81481196aa69036d6cdf96cd9374d4827a708ba4  . :(exclude)test
+asyncomplete.vim           https://github.com/prabirshrestha/asyncomplete.vim        17b654a87a834d4e835fb7467e562b4421ad9310
+asyncomplete-lsp.vim       https://github.com/prabirshrestha/asyncomplete-lsp.vim    7cf65e7661a6047f02bd1848ad30581d040896e5
+asyncomplete-buffer.vim    https://github.com/prabirshrestha/asyncomplete-buffer.vim a7afcf4f1f0ee8beaec4b3a20d814160ab097d8d
+asyncomplete-file.vim      https://github.com/prabirshrestha/asyncomplete-file.vim   770772daf1ff6ae29193bed02f8a7907913415d3
+ale                        https://github.com/dense-analysis/ale                     e1789bc54483d76ac9ddb40b633d1645c8281914  . :(exclude)test :(exclude)supported-tools.md
