@@ -1,5 +1,7 @@
 " Vendored plugins load (by tier); their settings and keys are checked in 61-plugin-config.vim
-for s:p in ['vim-nightfly-colors', 'vim-fugitive', 'vim-surround', 'vim-commentary', 'vim-repeat',
+" nightfly sets termguicolors, so vimrc loads it only where that exists
+call Expect('1', "index(g:myvim_plugins, 'vim-nightfly-colors') >= 0", exists('+termguicolors') ? 1 : 0)
+for s:p in ['vim-fugitive', 'vim-surround', 'vim-commentary', 'vim-repeat',
       \ 'ReplaceWithRegister', 'undotree', 'vim-maximizer', 'nerdtree',
       \ 'vim-gitgutter', 'lightline.vim', 'auto-pairs', 'indentLine', 'ctrlp.vim', 'vista.vim']
   call Expect('1', "index(g:myvim_plugins, '" . s:p . "') >= 0", 1)
