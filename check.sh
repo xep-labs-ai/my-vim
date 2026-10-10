@@ -1,7 +1,10 @@
 #!/bin/sh
 # Reports which vim this is, the my-vim tier it gets, the clipboard mode, and
-# which optional tools are missing. Read-only. Exits with the number of
-# problems (only a missing vim or a broken config count).
+# which optional tools are missing. In a folder from install_tiny.sh or
+# install_small.sh (it has a BUNDLE file), also which of its plugins this vim
+# skips. Read-only. Exits with the number of problems: a missing vim, a
+# broken config, a ~/.vimrc or ~/.vim that keeps vim from reading this one, or
+# a bundle plugin missing from the folder.
 REPO_DIR=$(cd "$(dirname "$0")" && pwd)
 PROBLEMS=0
 ok()   { echo "  ok    $1"; }
@@ -28,6 +31,28 @@ case $tier in
   *) warn "config didn't load (tier '$tier')" ;;
 esac
 [ -n "$plugins" ] && ok "plugins: $plugins"
+if [ -f "$REPO_DIR/BUNDLE" ]; then
+  ok "bundle: $(sed -n 1p "$REPO_DIR/BUNDLE")"
+  for p in $(sed -n 2p "$REPO_DIR/BUNDLE"); do
+    case " $plugins " in *" $p "*) continue ;; esac
+    if [ ! -d "$REPO_DIR/pack/vendor/opt/$p" ]; then
+      warn "$p is missing from $REPO_DIR/pack/vendor/opt (incomplete copy?)"
+    elif [ "$tier" != 1 ] && [ "$tier" != 2 ]; then
+      note "$p not loaded: this vim has no packages"
+    else
+      case $p in
+        vim-tmux-navigator) note "$p not loaded: needs vim 8.0.1108+ (:tnoremap); use tmux keys to change panes" ;;
+        vim-nightfly-colors) note "$p not loaded: this vim has no +termguicolors" ;;
+        *) warn "$p not loaded" ;;
+      esac
+    fi
+  done
+fi
+for f in "$HOME/.vimrc" "$HOME/_vimrc"; do
+  [ -e "$f" ] && warn "$f exists: vim reads it instead of ~/.vim/vimrc (install.sh moves it aside)"
+done
+[ "$(cd "$HOME/.vim" 2>/dev/null && pwd -P)" = "$(cd "$REPO_DIR" && pwd -P)" ] ||
+  warn "~/.vim isn't $REPO_DIR, so vim doesn't use this config (run install.sh)"
 case $clip in
   tmux|osc52|system) ok "clipboard: $clip" ;;
   *) note "clipboard: $clip" ;;
@@ -39,6 +64,11 @@ if [ -n "${TMUX:-}" ]; then
   case $(tmux show -gv set-clipboard 2>/dev/null) in
     off) note "tmux set-clipboard is off: yanks reach the tmux buffer but not your terminal" ;;
   esac
+fi
+if [ -f "$REPO_DIR/BUNDLE" ]; then
+  # the bundle has no fzf.vim, LSP or lint plugins: only git matters
+  command -v git >/dev/null 2>&1 && ok "git" || note "git not installed (fugitive, gitgutter and line blame need it)"
+  exit $PROBLEMS
 fi
 if command -v fzf >/dev/null 2>&1; then
   ok "fzf $(fzf --version | cut -d' ' -f1) (fzf.vim needs 0.63+, older uses ctrlp)"

@@ -2,3 +2,6 @@
 /.state/
 # VM addresses for the tests (never commit them: the repo is public)
 /.claude/*.local
+# built by install_tiny.sh / install_small.sh
+/vim_tiny/
+/vim_small/

@@ -8,13 +8,15 @@
 #   swap           a crash leaves a swap file: recover, then the delete prompt
 #   install        install.sh in a scratch HOME (backups, rerun, check.sh)
 #   readonly       bare, with the repo read-only (state dir falls back)
+#   bundle-tiny bundle-small   install_tiny.sh/install_small.sh folder copied to a scratch ~/.vim
+#   bundle-rocky8  the small folder on vim 8.0 in Docker without network
 #   rocky8 rocky9 ubuntu1604 centos7 tiny   Docker images from tests/docker/
 set -u
 here=$(cd "$(dirname "$0")" && pwd)
 repo=$(dirname "$here")
 tools=/opt/myvim-tools/bin:/opt/myvim-tools/node/bin
 samples="tests/samples/sample.py tests/samples/sample.yaml tests/samples/sample.sh tests/samples/sample.md"
-cases=${*:-tools tools-ansible bare keys swap install readonly rocky8 rocky9 ubuntu1604 centos7 tiny}
+cases=${*:-tools tools-ansible bare keys swap install readonly bundle-tiny bundle-small bundle-rocky8 rocky8 rocky9 ubuntu1604 centos7 tiny}
 failed=0
 for c in $cases; do
   out=/tmp/myvim-probe/$c/report
@@ -27,6 +29,9 @@ for c in $cases; do
     install)       "$here/installtest.sh" ;;
     bare)          PROBE_TIER=2 "$here/run-probe.sh" "$out" $samples ;;
     readonly)      chmod -R a-w "$repo"; PROBE_TIER=2 "$here/run-probe.sh" "$out" $samples; rc=$?; chmod -R u+w "$repo"; (exit $rc) ;;
+    bundle-tiny)   "$here/bundletest.sh" tiny ;;
+    bundle-small)  "$here/bundletest.sh" small ;;
+    bundle-rocky8) "$here/docker/bundle.sh" rocky8 small ;;
     rocky8)        PROBE_TIER=1 "$here/docker/run.sh" "$c" "$out" $samples ;;
     rocky9)        PROBE_TIER=2 "$here/docker/run.sh" "$c" "$out" $samples ;;
     ubuntu1604)    PROBE_TIER=1 "$here/docker/run.sh" "$c" "$out" $samples ;;
