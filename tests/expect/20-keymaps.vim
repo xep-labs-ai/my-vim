@@ -15,7 +15,7 @@ unlet s:m s:n
 call Scenario('eval', 'x does not touch the unnamed register', ['abc'], 'let @" = "keep"', 'x', '[getline(1), @"]', ['bc', 'keep'])
 " "9dd: an explicit register, so not the clipboard; a line delete still
 " shifts the numbered registers, so the line ends up in "1 (nvim does the same)
-call Scenario('eval', 'dd deletes into a named register', ['one', 'two'], '', 'dd', '[maparg("dd", "n"), @1]', ['"9dd', "one\n"])
+call Scenario('eval', 'dd deletes into a named register', ['one', 'two'], '', 'dd', '[maparg("dd", "n")[:3], @1]', ['"9dd', "one\n"])
 call Scenario('eval', 'jk leaves insert mode', ['ab'], '', 'ixjk', '[getline(1), mode()]', ['xab', 'n'])
 call Scenario('eval', '<leader>o adds a line below', ['a'], '', "\<Space>o", 'getline(1, "$")', ['a', ''])
 call Scenario('eval', '<leader>hh highlights the word, cursor stays', ['foo bar foo'], '', "w\<Space>hh", '[@/, col(".")]', ['\<bar\>', 5])

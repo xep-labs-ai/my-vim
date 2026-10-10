@@ -8,7 +8,13 @@ nnoremap Y y$
 
 " x deletes without copying; dd keeps the line in register 9 only
 nnoremap x "_x
-nnoremap dd "9dd
+" Before 8.2, v:register stays "9" for the next command, so a p right after dd
+" asked for register 9 (E353): "" resets it, <Esc> drops it again
+if v:version < 802
+  nnoremap dd "9dd""<Esc>
+else
+  nnoremap dd "9dd
+endif
 
 nnoremap <leader>+ <C-a>
 nnoremap <leader>- <C-x>
