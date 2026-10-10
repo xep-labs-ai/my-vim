@@ -11,10 +11,12 @@ elseif g:myvim_clip_mode !=# 'none'
       autocmd TextYankPost * call myvim#clip#on_yank(copy(v:event))
     augroup END
   endif
-  if g:myvim_clip_mode ==# 'tmux'
+  " without TextYankPost, yanks never reach the tmux buffer: p reading it
+  " would paste something older than what was just yanked
+  if g:myvim_clip_mode ==# 'tmux' && exists('##TextYankPost')
     for s:k in ['p', 'P', 'gp', 'gP']
-      execute 'nnoremap <silent> ' . s:k . ' :<C-u>call myvim#clip#put(' . string(s:k) . ', v:count1, v:register, 0)<CR>'
-      execute 'xnoremap <silent> ' . s:k . ' :<C-u>call myvim#clip#put(' . string(s:k) . ', v:count1, v:register, 1)<CR>'
+      execute 'nnoremap <expr> ' . s:k . ' myvim#clip#pull_for(v:register) . ' . string(s:k)
+      execute 'xnoremap <expr> ' . s:k . ' myvim#clip#pull_for(v:register) . ' . string(s:k)
     endfor
     unlet s:k
   endif
