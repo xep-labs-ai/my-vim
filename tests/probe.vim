@@ -145,7 +145,8 @@ endfunction
 if has('vim_starting')
   augroup probe
     autocmd!
-    autocmd VimEnter * call s:main()
+    " nested: the checks must trigger autocmds (TextYankPost, BufWinEnter, ...)
+    autocmd VimEnter * nested call s:main()
   augroup END
 else
   call s:main()
