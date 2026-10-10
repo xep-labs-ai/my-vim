@@ -38,6 +38,9 @@ else
     sleep 0.5
   done
   T capture-pane -p -t p > "$out.screen" 2>/dev/null
+  # quit before the kill, or a changed buffer leaves a swap file for the next run
+  T send-keys -t p Escape ':qa!' Enter 2>/dev/null
+  sleep 0.5
 fi
 T kill-server 2>/dev/null
 "$here/check-report.sh" "$out"
