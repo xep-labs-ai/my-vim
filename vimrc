@@ -76,7 +76,7 @@ if 1
   let g:myvim_plugins = []
   let s:t2 = g:myvim_tier >= 2
   let s:want = [
-    \ ['vim-nightfly-colors', 1], ['vim-fugitive', 1], ['vim-surround', 1],
+    \ ['vim-nightfly-colors', exists('+termguicolors')], ['vim-fugitive', 1], ['vim-surround', 1],
     \ ['vim-commentary', 1], ['vim-repeat', 1], ['ReplaceWithRegister', 1],
     \ ['vim-tmux-navigator', exists(':tnoremap') == 2], ['undotree', 1], ['vim-maximizer', 1],
     \ ['nerdtree', 1], ['vim-gitgutter', 1], ['lightline.vim', 1],
