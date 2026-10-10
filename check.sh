@@ -32,7 +32,7 @@ case $clip in
   tmux|osc52|system) ok "clipboard: $clip" ;;
   *) note "clipboard: $clip" ;;
 esac
-[ "$yankpost" = 0 ] && note "no TextYankPost (vim < 8.0.1394): yanks don't reach the clipboard; <leader>yy* and :MessagesToClipboard do"
+[ "$yankpost" = 0 ] && note "no TextYankPost (vim < 8.0.1394): yanks don't reach the clipboard and p doesn't read the tmux buffer; <leader>yy* and :MessagesToClipboard copy"
 if [ -n "${TMUX:-}" ]; then
   v=$(tmux -V 2>/dev/null)
   ok "$v"

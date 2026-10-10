@@ -72,27 +72,44 @@ endfunction
 
 " <leader>yy*, :MessagesToClipboard
 function! myvim#clip#copy(text) abort
+  let s:pending = 0
   let s:last = {'text': a:text, 'lines': split(a:text, "\n", 1), 'type': 'v'}
   call s:send(a:text)
 endfunction
 
-" TextYankPost: what unnamedplus copies, yanks and deletes into the unnamed register
+" TextYankPost: what unnamedplus copies, yanks and deletes into the unnamed
+" register. Sent from a 0 ms timer, so :g/x/d (one event per line) sends once.
+let s:pending = 0
 function! myvim#clip#on_yank(event) abort
   if a:event.regname !=# '' && a:event.regname !=# '"'
     return
   endif
   let text = join(a:event.regcontents, "\n") . (a:event.regtype ==# 'V' ? "\n" : '')
   let s:last = {'text': text, 'lines': copy(a:event.regcontents), 'type': a:event.regtype}
-  call s:send(text)
+  if !s:pending
+    let s:pending = 1
+    call timer_start(0, function('s:flush_timer'))
+  endif
+endfunction
+
+function! s:flush_timer(...) abort
+  call myvim#clip#flush()
+endfunction
+
+" send the last yank now if it is still waiting for its timer
+function! myvim#clip#flush() abort
+  if s:pending
+    let s:pending = 0
+    call s:send(s:last.text)
+  endif
 endfunction
 
 " Set the unnamed register from the tmux buffer, asking the client terminal
-" for its clipboard first (tmux 3.2+), like nvim's tmux provider
+" for its clipboard first (tmux 3.2+) and giving its answer 50 ms to arrive,
+" like nvim's tmux provider
 function! s:pull() abort
-  if s:tmux32()
-    call system('tmux refresh-client -l')
-  endif
-  let text = system('tmux save-buffer -')
+  call myvim#clip#flush()
+  let text = system((s:tmux32() ? 'tmux refresh-client -l 2>/dev/null && sleep 0.05; ' : '') . 'tmux save-buffer -')
   if v:shell_error || empty(text)
     return
   endif
@@ -109,12 +126,14 @@ function! s:pull() abort
   endif
 endfunction
 
-" p P gp gP (normal and visual) in tmux mode
-function! myvim#clip#put(key, count, reg, visual) abort
+" p P gp gP (normal and visual) in tmux mode are <expr> maps: pull the tmux
+" buffer into the unnamed register, then the native key does the rest (count,
+" register, visual mode and . all stay vim's own)
+function! myvim#clip#pull_for(reg) abort
   if a:reg ==# '"'
     call s:pull()
   endif
-  execute 'normal! ' . (a:visual ? 'gv' : '') . a:count . '"' . a:reg . a:key
+  return ''
 endfunction
 
 " :MessagesToClipboard (core/scripts.lua)

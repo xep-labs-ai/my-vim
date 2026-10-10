@@ -48,6 +48,9 @@ clipboard, and `p` pastes it:
   on your machine pastes too.
 - **Without tmux**: OSC 52 straight to your terminal; paste from your
   machine with the terminal's paste key.
+- vim older than 8.0.1394 (CentOS 7, Ubuntu 16.04) has no yank event:
+  yanks stay in vim and `p` pastes them as usual; `<leader>yyr/yyp/yyf` and
+  `:MessagesToClipboard` still copy.
 - `x` and `dd` don't touch the clipboard (`dd` still fills the numbered
   registers, so `"1p` brings the line back).
 

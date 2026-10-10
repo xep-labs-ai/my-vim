@@ -85,6 +85,8 @@ function! Scenario(cond, name, lines, setup, keys, expr, want) abort
     call add(s:out, 'SKIP ' . a:name)
     return
   endif
+  " timers from the previous check fire first, as they would while typing
+  sleep 10m
   let keep = bufnr('%')
   let cwd = getcwd()
   let v:errmsg = ''
