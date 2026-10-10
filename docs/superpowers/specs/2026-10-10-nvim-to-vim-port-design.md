@@ -69,9 +69,10 @@ plugin/                Own config, one file per topic, mirroring my-nvim's core/
   harpoon.vim            own small harpoon replacement (see below)
   terminal-keys.vim      <M-x> key definitions for terminal vim
 autoload/              Lazily-loaded functions used by the files above
-pack/vendor/start/     Plugins for tier 1
-pack/vendor/opt/       Plugins loaded conditionally (vim-lsp, asyncomplete*, ALE, fzf.vim)
-plugins.list           One line per vendored plugin: name, repo URL, pinned tag/commit, start|opt
+pack/vendor/opt/       All vendored plugins; vimrc's plugin table `packadd!`s each one
+                       by condition (tier, fzf version, or a vim version a plugin needs)
+plugins.list           One line per vendored plugin: name, repo URL, pinned commit,
+                       optional git pathspecs (to leave out tests and the like)
 update-plugins.sh      Re-vendors every plugin in plugins.list (git archive of the pinned
                        ref, .git stripped). Run on the dev machine only.
 install.sh             Links ~/.vim to the repo (moves an existing ~/.vim to ~/.vim.bak and
@@ -96,13 +97,11 @@ background=dark signcolumn=auto backspace=indent,eol,start splitright
 splitbelow iskeyword+=- title undofile`.
 
 Adapted:
-- `termguicolors` only when `has('termguicolors')` and the terminal is
-  not a bare console (`$COLORTERM` or `$TERM =~ 256color`), else 256 colors.
-- `clipboard`: `unnamedplus` only when `has('clipboard')` (servers usually
-  have `-clipboard`). Without it, yank to the client goes through OSC 52:
-  a `TextYankPost` autocmd (vim 8.0.1394+) sends the unnamed register as
-  OSC 52, wrapped for tmux (`\ePtmux;` passthrough) when `$TMUX` is set.
-  `<leader>yy*` use the same path.
+- `termguicolors` only when `has('termguicolors')` and the terminal has
+  256+ colours (`&t_Co >= 256`, i.e. not the Linux console); inside tmux
+  (`$TERM` is `screen*`/`tmux*`) also set `t_8f`/`t_8b`, which vim only
+  sets by itself for `xterm*`.
+- Clipboard: see "Clipboard and tmux" below.
 - `winbar` has no vim equivalent: the file name goes in the statusline.
 - Help window height and "move preview window to the right" autocmds: same
   logic in vimscript (`BufWinEnter` + `&ft ==# 'help'`, `WinEnter` +
@@ -112,7 +111,42 @@ Adapted:
 - Plus the vim defaults nvim gives for free: `nocompatible`, `filetype
   plugin indent on`, `syntax on`, `incsearch hlsearch`, `laststatus=2`,
   `wildmenu`, `ttimeout ttimeoutlen=50`, `encoding=utf-8`, `hidden`,
-  `autoread`, `belloff=all`.
+  `autoread`, `belloff=all`, `mouse=nvi`, `display=lastline`,
+  `nrformats=bin,hex`, `nostartofline`, `history=10000`, `smarttab`,
+  `formatoptions=tcqj`, `nojoinspaces`, `Y` = `y$`, and nvim's cursor
+  shapes (bar in insert, underline in replace).
+- Terminal escapes vim only sets for `xterm*` but tmux needs: bracketed
+  paste (`t_BE t_BD t_PS t_PE`, so pasting into insert mode doesn't
+  auto-indent every line), focus events (`t_fe t_fd`, for `autoread` and
+  gitgutter when switching panes), `ttymouse=sgr`.
+
+## Clipboard and tmux
+
+This is the most important part to get right: the user yanks in vim on a
+server, usually inside tmux, and pastes on their own machine, and the other
+way round. It must behave like my-nvim's `clipboard=unnamedplus` with nvim's
+tmux provider (see my-nvim's CLAUDE.md, "Clipboard over SSH/mosh + tmux").
+
+The mode is picked once at startup (`g:myvim_clip_mode`):
+
+| Mode | When | Yank (`y d c` to the unnamed register, `<leader>yy*`, `:MessagesToClipboard`) | `p P gp gP` (unnamed register) |
+|------|------|-------------------------|------------------------|
+| `system` | `has('clipboard')` and (`$DISPLAY`, `$WAYLAND_DISPLAY` or macOS) | `clipboard=unnamedplus`, vim does it | vim does it |
+| `tmux` | `$TMUX` set and `tmux` on PATH | `tmux load-buffer -w -` (tmux 3.2+: buffer + OSC 52 to the client through tmux's `set-clipboard`); older tmux: `load-buffer -` plus an OSC 52 wrapped in tmux passthrough | first `tmux refresh-client -l` (3.2+, asks the client terminal for its clipboard), then the unnamed register is set from `tmux save-buffer -`, so text copied in another pane or on the client pastes with `p` |
+| `osc52` | anything else in a terminal (no tmux, or tmux whose `$TMUX` was lost, e.g. `sudo`) | OSC 52 `ESC]52;c;<base64>BEL` written to the terminal (`echoraw()`, else `/dev/tty`) | vim's own register; paste from the client with the terminal's paste key |
+
+- Only what `unnamedplus` would copy is synced: yanks/deletes into the
+  unnamed register. `x` (`"_x`), `dd` (`"9dd`) and visual `<CR>` (`"hy`)
+  don't touch the clipboard, and `p` after them pastes the clipboard, as in
+  nvim.
+- When the tmux buffer holds exactly what vim last sent, `p` keeps vim's own
+  register (so blockwise yanks stay blockwise).
+- The selection parameter is always `c`: mosh only forwards `52;c;`.
+- Yank sync needs `TextYankPost` (vim 8.0.1394+); older vims get the
+  `<leader>yy*` keys and `:MessagesToClipboard` only. `check.sh` says so.
+- With a tmux that has no my-tmux config, mosh can't carry tmux's OSC 52
+  (tmux sends `52;;`); ssh works. That's a tmux setting, documented in the
+  README, not something vim can fix.
 
 ### Keymaps
 
@@ -173,7 +207,7 @@ attaches or ALE has a tool for the filetype):
 | `<leader>pd pt pi pr pD` | `:LspPeekDefinition` etc. (vim-lsp preview popup) | goto-preview |
 | `<leader>pP` | close preview/popups | goto-preview |
 | `<space>rn`, `<space>ca` | `:LspRename`, `:LspCodeAction` | lspconfig |
-| `<space>D`, `<space>wa wr wl` | type definition, workspace folders | lspconfig |
+| `<space>D` | type definition | lspconfig |
 | `<space>e`, `[d`, `]d`, `<space>q` | `:LspDocumentDiagnostics`/ALE detail, next/prev diagnostic, location list | diagnostics |
 | `<space>lspe lsps lspI` | start / stop / `:LspStatus` | lspconfig |
 | `<leader>fls` | `:LspDocumentSymbol` | telescope lsp |
@@ -199,32 +233,31 @@ vim-lsp. Nothing is installed on servers; `check.sh` lists what's missing.
 
 ### Plugins vendored
 
-| Plugin | Dir | Replaces |
+| Plugin | Loads at | Replaces |
 |--------|-----|----------|
-| bluz71/vim-nightfly-colors | start | same (vim build), + CursorLine `#202d69` override |
-| tpope/vim-fugitive | start | fugitive, neogit, diffview |
-| tpope/vim-surround | start | same |
-| tpope/vim-commentary | start | Comment.nvim |
-| tpope/vim-repeat | start | (needed by surround/commentary repeat) |
-| vim-scripts/ReplaceWithRegister | start | same |
-| christoomey/vim-tmux-navigator | start | same |
-| mbbill/undotree | start | undotree, telescope-undo |
-| szw/vim-maximizer | start | same |
-| preservim/nerdtree | start | nvim-tree |
-| airblade/vim-gitgutter | start | gitsigns |
-| itchyny/lightline.vim | start | lualine (colours from lualine.lua) |
-| mengelbrecht/lightline-bufferline | start | bufferline |
-| jiangmiao/auto-pairs | start | nvim-autopairs |
-| Yggdroot/indentLine | start | indent-blankline |
-| ctrlpvim/ctrlp.vim | start | telescope fallback |
-| liuchengxu/vista.vim | start | outline.nvim |
-| junegunn/fzf (vim plugin part only) + junegunn/fzf.vim | opt | telescope |
-| prabirshrestha/vim-lsp | opt | lspconfig |
-| prabirshrestha/asyncomplete.vim + asyncomplete-lsp.vim + asyncomplete-buffer.vim + asyncomplete-file.vim | opt | nvim-cmp sources |
-| dense-analysis/ale | opt | nvim-lint, conform |
+| bluz71/vim-nightfly-colors | tier 1 | same (vim build), + CursorLine `#202d69` override |
+| tpope/vim-fugitive | tier 1 | fugitive, neogit, diffview |
+| tpope/vim-surround | tier 1 | same |
+| tpope/vim-commentary | tier 1 | Comment.nvim |
+| tpope/vim-repeat | tier 1 | (needed by surround/commentary repeat) |
+| vim-scripts/ReplaceWithRegister | tier 1 | same |
+| christoomey/vim-tmux-navigator | tier 1 | same |
+| mbbill/undotree | tier 1 | undotree, telescope-undo |
+| szw/vim-maximizer | tier 1 | same |
+| preservim/nerdtree | tier 1 | nvim-tree |
+| airblade/vim-gitgutter | tier 1 | gitsigns |
+| itchyny/lightline.vim | tier 1 | lualine (colours from lualine.lua) and bufferline (which runs in `mode = "tabs"`: lightline's own tabline) |
+| jiangmiao/auto-pairs | tier 1 | nvim-autopairs |
+| Yggdroot/indentLine | tier 1 | indent-blankline (one colour, not rainbow; off for json/markdown/help, where its `conceal` would hide quotes) |
+| ctrlpvim/ctrlp.vim | tier 1 | telescope fallback |
+| liuchengxu/vista.vim | tier 1 | outline.nvim |
+| junegunn/fzf (vim plugin part only) + junegunn/fzf.vim | tier 1 with fzf 0.63+ | telescope |
+| prabirshrestha/vim-lsp | tier 2 | lspconfig |
+| prabirshrestha/asyncomplete.vim + asyncomplete-lsp.vim + asyncomplete-buffer.vim + asyncomplete-file.vim | tier 2 | nvim-cmp sources |
+| dense-analysis/ale | tier 2 | nvim-lint, conform |
 
-Each pinned to a release tag (or a commit when the project has no tags) in
-`plugins.list`. Licences (MIT / Vim / Apache) are kept in each plugin dir.
+Each pinned to a commit in `plugins.list` (many of these projects tag rarely,
+so commits, not tags). Licences (MIT / Vim / Apache) are kept in each plugin dir.
 
 ### Own harpoon replacement
 
@@ -234,13 +267,22 @@ Each pinned to a release tag (or a commit when the project has no tags) in
 buffer you edit like text (reorder/delete lines, `:w` or `q` saves),
 `<M-h/j/k/l>` open entries 1-4, `<M-p>/<M-n>` previous/next.
 
+### Line blame (git-blame.nvim)
+
+On by default like git-blame.nvim, toggled with `<leader>fgSt`: after the
+cursor rests (`updatetime=300`), ` <summary> • <date> • <author> • <<sha>>`
+for the cursor line, as virtual text after the line on vim 9.0.1000+ with
+`+textprop`, echoed otherwise. `git blame --contents -` so unsaved edits
+don't shift it.
+
 ### Not ported
 
 treesitter (vim syntax files instead), nvim-ufo, render-markdown,
 CopilotChat, copilot.vim (needs Node and a GitHub login per server),
 neogit/diffview (fugitive covers it), which-key, cheatsheet, lsp_signature
 (`gK` covers it), nvim-web-devicons (no Nerd Font guaranteed on the
-client path), Mason (nothing is installed on servers), the telescope-specific
+client path), LSP workspace-folder keys (`<space>wa wr wl`: vim-lsp has no
+commands for them), Mason (nothing is installed on servers), the telescope-specific
 `gL` picker.
 
 ## Terminal key handling
@@ -265,8 +307,8 @@ Matrix:
 |------|----|--------|
 | A: modern, tools | Ubuntu 24.04 (vim 9.1), pyright, yaml-language-server, shellcheck, yamllint, fzf, ripgrep, ctags | all tiers, LSP attach, ALE, fzf keys |
 | B: modern, bare | same VM, snapshot before tools | tier 1 only, ctrlp fallback, no LSP messages |
-| C: old vim | RHEL-like template if one exists, else vim 8.0 built into `/opt` on case B's VM | tier 1 without LSP, no errors |
-| D: tiny | `vim-tiny` only (`apt purge vim`, or `vim.tiny` binary) | starts with no errors |
+| C: old vims | Docker containers on case B's VM (the `docker-host` template; there is no RHEL template): Rocky 8 (vim 8.0, tmux 2.7), Rocky 9 (vim 8.2, tmux 3.2a), Ubuntu 16.04 (vim 7.4.1689, has `packages`), CentOS 7 (vim 7.4.629, no `packages`) | right tier, no errors |
+| D: tiny | Debian 12 container with only `vim-tiny` | starts with no errors |
 | E: offline | case B with the default route removed, repo copied with `scp -r` | same as B |
 
 Probes in `tests/`:
@@ -279,6 +321,20 @@ Probes in `tests/`:
   `:messages` misses.
 - Snapshots per VM after the base install, so reruns revert instead of
   recloning.
+
+Clipboard chains (run from a second VM, `my-vim-client01`, with tmux, mosh
+and my-tmux, using my-nvim's `cliptest` harness adapted for vim): yank on
+the server must reach the server's tmux buffer and the client terminal as
+OSC 52, and `p` must paste the tmux buffer (also text set by another pane):
+
+1. ssh → tmux → vim
+2. mosh → tmux → vim
+3. client tmux → ssh → tmux → vim
+4. client tmux → mosh → tmux → vim
+5. ssh → vim (no tmux; OSC 52 straight to the terminal)
+6. ssh → tmux → `env -u TMUX vim` (tmux lost from the environment)
+7. ssh → tmux with no config (`-f /dev/null`) → vim
+8. ssh → Rocky 8 container: tmux 2.7 → vim 8.0 (old-tmux path, no `echoraw()`)
 
 ## Out of scope (for now)
 
