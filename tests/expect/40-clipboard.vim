@@ -13,6 +13,8 @@ call Scenario('yankpost', 'yiw reaches the tmux buffer', ['word other'], '', 'yi
 call Scenario('yankpost', 'deletes reach it too (unnamedplus)', ['gone'], '', 'diw', s:buf, 'gone')
 call Scenario('yankpost', 'yank into a named register does not', ['named'], printf(s:set, 'keep-1'), '"ayy', s:buf, 'keep-1')
 call Scenario('tmux', 'x does not touch the tmux buffer', ['xyz'], printf(s:set, 'keep-2'), 'x', s:buf, 'keep-2')
+" vim < 8.2 kept v:register at _ after the "_x mapping: p pasted nothing
+call Scenario('tmux', 'xp pastes the clipboard', ['abc'], printf(s:set, 'q'), 'xp', 'getline(1)', 'bqc')
 call Scenario('tmux', 'p pastes the tmux buffer (another pane set it)', ['a'], printf(s:set, 'from-pane'), 'p', 'getline(1)', 'afrom-pane')
 call Scenario('tmux', '3p pastes three times', ['a'], printf(s:set, 'z'), '3p', 'getline(1)', 'azzz')
 call Scenario('tmux', '"ap pastes register a, not the tmux buffer', ['a'], 'let @a = "reg-a" | ' . printf(s:set, 'tmux-text'), '"ap', 'getline(1)', 'areg-a')
