@@ -36,7 +36,8 @@ function! s:ok(cond) abort
 endfunction
 
 function! s:report(pass, what) abort
-  call add(s:out, (a:pass ? 'PASS ' : 'FAIL ') . a:what)
+  " writefile() turns a newline into a NUL, and grep then sees a binary file
+  call add(s:out, (a:pass ? 'PASS ' : 'FAIL ') . substitute(a:what, "\n", '\\n', 'g'))
   if !a:pass
     let s:fails += 1
   endif
@@ -96,7 +97,8 @@ function! Scenario(cond, name, lines, setup, keys, expr, want) abort
       silent execute a:setup
     endif
     if !empty(a:keys)
-      silent execute 'normal' a:keys
+      " :normal skips leading spaces (a <Space> leader); <C-\><C-n> is a no-op
+      silent execute "normal \<C-\>\<C-n>" . a:keys
     endif
     let got = eval(a:expr)
   catch
