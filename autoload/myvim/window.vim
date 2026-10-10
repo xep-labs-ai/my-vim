@@ -26,3 +26,24 @@ function! myvim#window#pedit_vertical() abort
   wincmd P
   wincmd L
 endfunction
+
+" <C-P><C-D> / <C-P><C-U>: scroll the preview window half a page from anywhere
+function! myvim#window#preview_scroll(dir) abort
+  for w in range(1, winnr('$'))
+    if getwinvar(w, '&previewwindow')
+      let cur = winnr()
+      noautocmd execute w . 'wincmd w'
+      execute 'normal!' (a:dir ==# 'down' ? "\<C-D>" : "\<C-U>")
+      noautocmd execute cur . 'wincmd w'
+      return
+    endif
+  endfor
+  echo 'No preview window found'
+endfunction
+
+" <leader>hi: syntax groups under the cursor (nvim's :Inspect)
+function! myvim#window#inspect() abort
+  let [l, c] = [line('.'), col('.')]
+  let stack = map(synstack(l, c), 'synIDattr(v:val, "name")')
+  echo (empty(stack) ? '(no syntax)' : join(stack, ' > ')) . ' -> ' . synIDattr(synIDtrans(synID(l, c, 1)), 'name')
+endfunction
