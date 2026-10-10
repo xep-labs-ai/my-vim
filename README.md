@@ -23,6 +23,30 @@ ssh user@server sh my-vim/install.sh
 `~/.vimrc` to `*.bak`, and runs `check.sh`. Safe to rerun; no sudo.
 Update with `git -C ~/my-vim pull`.
 
+### Smaller copies: `vim_tiny` and `vim_small`
+
+For servers where you only want the essentials. On a machine with the repo:
+
+```sh
+sh install_tiny.sh     # builds vim_tiny/  (~0.6 MB)
+sh install_small.sh    # builds vim_small/ (~4 MB)
+scp -r vim_small user@server:.vim     # the server must have no ~/.vim yet
+ssh user@server sh .vim/install.sh    # moves ~/.vimrc aside, runs check.sh
+```
+
+Both have the whole config (options, keymaps, clipboard through tmux, harpoon,
+line blame) and only these plugins, most important first:
+
+| | Plugins |
+|---|---|
+| tiny | vim-tmux-navigator, vim-commentary, vim-surround, vim-repeat, ReplaceWithRegister, ctrlp.vim |
+| small | tiny plus nerdtree, lightline.vim, vim-fugitive, vim-gitgutter, undotree, vim-maximizer, vim-nightfly-colors, indentLine, auto-pairs |
+
+No LSP, completion, lint or fzf (they need tools an offline server won't
+have). `sh ~/.vim/check.sh` on the server says which bundle it is, which of
+its plugins that vim skips and why, and warns when a `~/.vimrc` would keep
+vim from reading `~/.vim/vimrc`.
+
 `sh ~/my-vim/check.sh` shows the vim version, the tier it gets, the
 clipboard mode and which optional tools are missing.
 
