@@ -97,8 +97,9 @@ function! Scenario(cond, name, lines, setup, keys, expr, want) abort
       silent execute a:setup
     endif
     if !empty(a:keys)
-      " :normal skips leading spaces (a <Space> leader); <C-\><C-n> is a no-op
-      silent execute "normal \<C-\>\<C-n>" . a:keys
+      " :normal skips leading spaces (a <Space> leader): put an <Esc> first
+      " (<Ignore> doesn't work before 8.2, plugins map <C-\>)
+      silent execute 'normal' (a:keys =~# '^\s' ? "\<Esc>" : '') . a:keys
     endif
     let got = eval(a:expr)
   catch

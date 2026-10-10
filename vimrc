@@ -78,7 +78,7 @@ if 1
   let s:want = [
     \ ['vim-nightfly-colors', 1], ['vim-fugitive', 1], ['vim-surround', 1],
     \ ['vim-commentary', 1], ['vim-repeat', 1], ['ReplaceWithRegister', 1],
-    \ ['vim-tmux-navigator', 1], ['undotree', 1], ['vim-maximizer', 1],
+    \ ['vim-tmux-navigator', exists(':tnoremap') == 2], ['undotree', 1], ['vim-maximizer', 1],
     \ ['nerdtree', 1], ['vim-gitgutter', 1], ['lightline.vim', 1],
     \ ['auto-pairs', 1], ['indentLine', 1], ['ctrlp.vim', 1], ['vista.vim', 1],
     \ ['fzf', g:myvim_fzf], ['fzf.vim', g:myvim_fzf],

@@ -7,12 +7,13 @@ nnoremap <leader>hn :nohl<CR>
 nnoremap Y y$
 
 " x deletes without copying; dd keeps the line in register 9 only
-nnoremap x "_x
-" Before 8.2, v:register stays "9" for the next command, so a p right after dd
-" asked for register 9 (E353): "" resets it, <Esc> drops it again
+" Before 8.2, v:register keeps "_ or "9 for the next command, so a p right
+" after x or dd pasted nothing or failed (E353): "" resets it, <Esc> drops it
 if v:version < 802
+  nnoremap x "_x""<Esc>
   nnoremap dd "9dd""<Esc>
 else
+  nnoremap x "_x
   nnoremap dd "9dd
 endif
 
