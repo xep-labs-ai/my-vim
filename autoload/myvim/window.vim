@@ -18,3 +18,11 @@ function! myvim#window#preview_right() abort
     endif
   endfor
 endfunction
+
+" <C-W>{{: the tag under the cursor in a preview window on the far right
+function! myvim#window#pedit_vertical() abort
+  let &previewheight = winwidth(0) * 2 / 5
+  execute 'pedit +/' . escape(expand('<cword>'), ' \/')
+  wincmd P
+  wincmd L
+endfunction
